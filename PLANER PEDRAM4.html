@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Planner Ultra v4.0 | سیستم مدیریت زمان و برنامه کلان</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --panel-bg: rgba(20, 27, 45, 0.75);
+            --accent: #a855f7;
+            --accent-glow: rgba(168, 85, 247, 0.4);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text: #f3f4f6;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-main);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 25px;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px;
+            border-radius: 16px;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            color: white;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .view-section {
+            display: none;
+            opacity: 0;
+            transform: scale(0.98) translateY(15px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .view-section.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .grid-7 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .grid-30 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+
+        .main-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #c084fc;
+        }
+
+        .timeline-creator {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+        }
+
+        input, select, textarea {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 14px;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            border: none;
+            color: white;
+            padding: 0 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .activity-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+        
+        .activity-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-controls { display: flex; gap: 8px; }
+
+        .status-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-check { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .btn-check.active { background: var(--success); color: white; }
+        .btn-cross { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .btn-cross.active { background: var(--danger); color: white; }
+        .btn-delete { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+        .btn-delete:hover { background: var(--danger); color: white; }
+
+        .timers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .timer-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .timer-input-title {
+            background: transparent;
+            border: none;
+            border-bottom: 2px dashed rgba(255,255,255,0.15);
+            border-radius: 0;
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            padding: 4px;
+            width: 80%;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+        }
+        .timer-input-title:focus { border-bottom-color: var(--accent); box-shadow: none; }
+
+        .timer-display {
+            font-size: 32px;
+            font-weight: bold;
+            font-family: monospace;
+            margin: 12px 0;
+            color: #38bdf8;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        .t-btn-sync {
+            background: rgba(168, 85, 247, 0.2);
+            color: #e9d5ff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .t-btn-sync:hover { background: var(--accent); color: white; }
+
+        .goals-box-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logged-hours-badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            margin-right: 5px;
+        }
+
+        .custom-macro-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div>
+            <h1 style="font-size: 24px; font-weight: 800; background: linear-gradient(to left, #c084fc, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CORE PLANNER ULTRA v4.0</h1>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">مدیریت متصل ۲۴ ساعته + بوم برنامه ریزی کلان سفارشی</p>
+        </div>
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="switchSection('macro-view')"><i class="fa-solid fa-compass"></i> ۱. برنامه ریزی کلی</button>
+            <button class="tab-btn active" onclick="switchSection('day-view')"><i class="fa-solid fa-calendar-day"></i> ۲. برنامه ریزی روزانه</button>
+            <button class="tab-btn" onclick="switchSection('week-view')"><i class="fa-solid fa-chart-simple"></i> ۳. گزارش هفتگی</button>
+            <button class="tab-btn" onclick="switchSection('month-view')"><i class="fa-solid fa-calendar-days"></i> ۴. نمای ماهانه</button>
+        </div>
+    </header>
+
+    <!-- بخش جدید: برنامه ریزی کلی (محیط با قابلیت شخصی سازی کامل) -->
+    <section id="macro-view" class="view-section">
+        <div class="main-card">
+            <div class="card-title">
+                <span><i class="fa-solid fa-layer-group"></i> بوم برنامه ریزی کلی و استراتژیک بلند مدت</span>
+                <span style="font-size: 12px; color: var(--text-muted);">شخصی‌سازی نامحدود ساختار آموزشی و مهارتی</span>
+            </div>
+            <div class="custom-macro-grid">
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius:16px;">
+                    <h4 style="margin-bottom:10px; color:#38bdf8;">🎯 اهداف و چشم‌انداز ترم / کنکور</h4>
+                    <textarea id="macro-vision" style="width:100%; height:120px; resize: none;" placeholder="چشم انداز یا رتبه و تراز هدفت را بنویس..." oninput="saveMacroData()"></textarea>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius:16px;">
+                    <h4 style="margin-bottom:10px; color:#10b981;">⚖️ ضرایب و اولویت‌بندی دروس سفارشی</h4>
+                    <textarea id="macro-weights" style="width:100%; height:120px; resize: none;" placeholder="مثال: حسابان (ضریب ۱۲) / فیزیک (ضریب ۹)..." oninput="saveMacroData()"></textarea>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius:16px;">
+                    <h4 style="margin-bottom:10px; color:#f59e0b;">📦 منابع و کتب تستی مورد نیاز</h4>
+                    <textarea id="macro-books" style="width:100%; height:120px; resize: none;" placeholder="کدام کتاب‌ها باید تا پایان فصل تمام شوند؟" oninput="saveMacroData()"></textarea>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius:16px;">
+                    <h4 style="margin-bottom:10px; color:#ec4899;">💡 زنجیره مهارتی و توسعه فردی</h4>
+                    <textarea id="macro-skills" style="width:100%; height:120px; resize: none;" placeholder="برنامه‌نویسی، زبان، ورزش یا کارهای تجاری..." oninput="saveMacroData()"></textarea>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- نمای روزانه همراه با فیلد شخصی سازی تایمر و باکس ارزیابی هدف -->
+    <section id="day-view" class="view-section active">
+        <!-- باکس دوگانه اهداف روزانه و نتیجه گیری -->
+        <div class="goals-box-wrapper">
+            <div class="main-card" style="margin-bottom:0;">
+                <div class="card-title" style="color: #38bdf8; margin-bottom: 10px;"><i class="fa-solid fa-bullseye"></i> هدف اصلی امروز من چیست؟</div>
+                <input type="text" id="day-target-goal" style="width: 100%;" placeholder="مثلاً: اتمام تست‌های کلید حد و پیوستگی" oninput="saveDailyGoals()">
+            </div>
+            <div class="main-card" style="margin-bottom:0;">
+                <div class="card-title" style="color: #10b981; margin-bottom: 10px;"><i class="fa-solid fa-square-poll-vertical"></i> آیا اهداف امروز محقق شدند؟ چطور بود؟</div>
+                <select id="day-target-result" style="width: 100%;" onchange="saveDailyGoals()">
+                    <option value="none">هنوز ارزیابی نشده</option>
+                    <option value="perfect">🟢 بله، عالی و طبق برنامه پیش رفتم</option>
+                    <option value="medium">🟡 تا حدودی انجام شد (نیاز به جبران)</option>
+                    <option value="failed">🔴 خیر، تنبلی یا گپ زمانی داشتم</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin: 20px 0; text-align: left;">
+            <span style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: bold;">
+                <i class="fa-solid fa-hourglass-start"></i> کل کارکرد واقعی امروز شما: <span id="total-today-minutes">۰</span> دقیقه
+            </span>
+        </div>
+
+        <div class="main-card">
+            <div class="card-title">📍 برنامه ریزی بازه‌های زمانی روز جاری</div>
+            <div class="timeline-creator">
+                <input type="text" id="day-act-title" placeholder="عنوان فعالیت (مثلاً: تست هندسه یا تحلیل آزمون)">
+                <input type="time" id="day-act-time" value="08:00">
+                <select id="day-act-cat">
+                    <option value="درس">📚 درس تخصصی</option>
+                    <option value="توسعه">🚀 شخصی و مهارتی</option>
+                    <option value="سلامت">💪 ورزش و سلامت</option>
+                    <option value="استراحت">☕ استراحت و خواب</option>
+                </select>
+                <button class="action-btn" onclick="addActivityToDay()">تزریق به بازه</button>
+            </div>
+            <ul class="activity-list" id="day-activity-dump"></ul>
+        </div>
+
+        <!-- کرونومترهای کاملاً پویا و قابل تایپ شخصی -->
+        <div class="main-card">
+            <div class="card-title">
+                <span><i class="fa-solid fa-stopwatch"></i> کرونومترهای پارت درسی (عنوان‌ها را به دلخواه تایپ و ویرایش کنید)</span>
+                <button class="action-btn" style="padding: 6px 14px; font-size:12px;" onclick="addNewCustomTimer()"><i class="fa-solid fa-plus"></i> افزودن باکس تایمر جدید</button>
+            </div>
+            <div class="timers-grid" id="timers-container"></div>
+        </div>
+    </section>
+
+    <!-- نمای هفتگی -->
+    <section id="week-view" class="view-section">
+        <div class="grid-7" id="week-grid-container"></div>
+    </section>
+
+    <!-- نمای ۳۰ روزه کلان -->
+    <section id="month-view" class="view-section">
+        <div class="main-card">
+            <div class="card-title"><i class="fa-solid fa-star"></i> اهداف کلان ۳۰ روزه این ماه</div>
+            <textarea id="master-goals-input" style="width:100%; height:80px;" placeholder="اهداف اصلی این ماه خود را اینجا بنویسید..." oninput="saveMasterGoals()"></textarea>
+        </div>
+        <div class="grid-30" id="month-grid-container"></div>
+    </section>
+</div>
+
+<script>
+    const daysOfWeek = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    
+    // دیتابیس لود از حافظه
+    let masterDatabase = JSON.parse(localStorage.getItem('core_planner_db')) || Array.from({ length: 30 }, (_, i) => ({
+        dayIndex: i + 1,
+        dayName: daysOfWeek[i % 7],
+        activities: [],
+        studyLogs: {}, 
+        dailyGoal: "",
+        dailyResult: "none"
+    }));
+
+    // بارگذاری پارت عناوین تایمرها (اگر نبود پیش‌فرض‌ها چیده می‌شود)
+    let timerTitles = JSON.parse(localStorage.getItem('core_timer_titles')) || ["حسابان یازدهم", "فیزیک یازدهم", "شیمی ۲", "هندسه / آمار", "توسعه فردی"];
+
+    let currentActiveDay = 1;
+    let timerIntervals = [];
+    let timerSeconds = [];
+
+    function saveToLocalStorage() {
+        localStorage.setItem('core_planner_db', JSON.stringify(masterDatabase));
+    }
+
+    function switchSection(sectionId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        if(event) event.target.classList.add('active');
+
+        document.querySelectorAll('.view-section').forEach(sec => {
+            sec.style.opacity = '0';
+            sec.classList.remove('active');
+        });
+
+        const target = document.getElementById(sectionId);
+        target.classList.add('active');
+        setTimeout(() => target.style.opacity = '1', 50);
+
+        if(sectionId === 'day-view') { renderDayActivities(); updateMinutesBadge(); }
+        if(sectionId === 'week-view') renderWeekView();
+        if(sectionId === 'month-view') renderMonthView();
+        if(sectionId === 'macro-view') loadMacroData();
+    }
+
+    function addActivityToDay() {
+        const title = document.getElementById('day-act-title').value.trim();
+        const time = document.getElementById('day-act-time').value;
+        const cat = document.getElementById('day-act-cat').value;
+        if(!title) return;
+
+        masterDatabase[currentActiveDay - 1].activities.push({
+            id: Date.now().toString(),
+            title, time, cat, status: 'none'
+        });
+        document.getElementById('day-act-title').value = '';
+        saveToLocalStorage();
+        renderDayActivities();
+    }
+
+    function renderDayActivities() {
+        const container = document.getElementById('day-activity-dump');
+        container.innerHTML = '';
+        const dayData = masterDatabase[currentActiveDay - 1];
+
+        // لود اهداف روزانه اختصاصی این روز در باکس ها
+        document.getElementById('day-target-goal').value = dayData.dailyGoal || "";
+        document.getElementById('day-target-result').value = dayData.dailyResult || "none";
+
+        dayData.activities.forEach(act => {
+            const li = document.createElement('li');
+            li.className = 'activity-item';
+            li.innerHTML = `
+                <div>
+                    <span style="color:var(--text-muted); font-size:12px;">[${act.time}]</span>
+                    <strong>${act.title}</strong>
+                    <span style="background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:6px; font-size:11px; margin-right:8px;">${act.cat}</span>
+                </div>
+                <div class="status-controls">
+                    <button class="status-btn btn-check ${act.status==='done'?'active':''}" onclick="setActStatus('${act.id}','done')"><i class="fa-solid fa-check"></i></button>
+                    <button class="status-btn btn-cross ${act.status==='failed'?'active':''}" onclick="setActStatus('${act.id}','failed')"><i class="fa-solid fa-times"></i></button>
+                    <button class="status-btn btn-delete" onclick="deleteActivity('${act.id}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(li);
+        });
+    }
+
+    function setActStatus(id, status) {
+        const day = masterDatabase[currentActiveDay - 1];
+        const act = day.activities.find(a => a.id === id);
+        if(act) act.status = act.status === status ? 'none' : status;
+        saveToLocalStorage();
+        renderDayActivities();
+    }
+
+    function deleteActivity(id) {
+        masterDatabase[currentActiveDay - 1].activities = masterDatabase[currentActiveDay - 1].activities.filter(a => a.id !== id);
+        saveToLocalStorage();
+        renderDayActivities();
+    }
+
+    function saveDailyGoals() {
+        const dayData = masterDatabase[currentActiveDay - 1];
+        dayData.dailyGoal = document.getElementById('day-target-goal').value;
+        dayData.dailyResult = document.getElementById('day-target-result').value;
+        saveToLocalStorage();
+    }
+
+    // همگام‌سازی تایتل متغیر ثبت شده توسط خود کاربر بالای هر تایمر
+    function updateTimerTitle(idx, value) {
+        timerTitles[idx] = value;
+        localStorage.setItem('core_timer_titles', JSON.stringify(timerTitles));
+    }
+
+    function addNewCustomTimer() {
+        timerTitles.push("درس جدید سفارشی");
+        localStorage.setItem('core_timer_titles', JSON.stringify(timerTitles));
+        initTimers();
+    }
+
+    function syncTimerToLog(idx) {
+        const minutes = Math.round(timerSeconds[idx] / 60);
+        if(minutes < 1) {
+            alert("زمان کرونومتر باید حداقل ۱ دقیقه باشد تا مجاز به تزریق باشید!");
+            return;
+        }
+        const subject = timerTitles[idx];
+        const focusLevel = document.getElementById(`focus-mood-${idx}`).value;
+        
+        if(!masterDatabase[currentActiveDay - 1].studyLogs[subject]) {
+            masterDatabase[currentActiveDay - 1].studyLogs[subject] = 0;
+        }
+        masterDatabase[currentActiveDay - 1].studyLogs[subject] += minutes;
+        
+        masterDatabase[currentActiveDay - 1].activities.push({
+            id: Date.now().toString(),
+            title: `⏱️ کارکرد واقعی: ${minutes} دقیقه [${subject}] با کیفیت تمرکز ${focusLevel}`,
+            time: "تایمر",
+            cat: "درس",
+            status: "done"
+        });
+
+        timerSeconds[idx] = 0;
+        updateTimerDisplay(idx);
+        saveToLocalStorage();
+        renderDayActivities();
+        updateMinutesBadge();
+        alert(`✨ موفقیت: زمان با عنوان "${subject}" ثبت و به کارنامه اضافه شد.`);
+    }
+
+    function updateMinutesBadge() {
+        const dayData = masterDatabase[currentActiveDay - 1];
+        const total = Object.values(dayData.studyLogs).reduce((a, b) => a + b, 0);
+        document.getElementById('total-today-minutes').innerText = total;
+    }
+
+    function initTimers() {
+        const container = document.getElementById('timers-container');
+        container.innerHTML = '';
+        timerIntervals = Array(timerTitles.length).fill(null);
+        timerSeconds = Array(timerTitles.length).fill(0);
+
+        timerTitles.forEach((title, idx) => {
+            container.innerHTML += `
+                <div class="timer-box">
+                    <input type="text" class="timer-input-title" value="${title}" oninput="updateTimerTitle(${idx}, this.value)" placeholder="نام درس یا فعالیت">
+                    <div class="timer-display" id="timer-display-${idx}">00:00:00</div>
+                    <div style="display:flex; gap:6px; justify-content:center; margin-bottom:12px;">
+                        <button class="status-btn" style="background:#10b981" onclick="startTimer(${idx})"><i class="fa-solid fa-play"></i></button>
+                        <button class="status-btn" style="background:#f59e0b" onclick="pauseTimer(${idx})"><i class="fa-solid fa-pause"></i></button>
+                        <button class="status-btn" style="background:#ef4444" onclick="resetTimer(${idx})"><i class="fa-solid fa-rotate-left"></i></button>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <select id="focus-mood-${idx}" style="padding:5px; font-size:11px; width:90%;">
+                            <option value="⭐ عالی (تمرکز ۱۰۰)">⭐ عالی (تمرکز ۱۰۰٪)</option>
+                            <option value="⚡ متوسط">⚡ متوسط و پارت عادی</option>
+                            <option value="💤 حواس‌پرت">💤 بی حوصله / حواس‌پرت</option>
+                        </select>
+                    </div>
+                    <button class="t-btn-sync" onclick="syncTimerToLog(${idx})"><i class="fa-solid fa-cloud-upload"></i> تزریق مستقیم به بازه و کارنامه</button>
+                </div>
+            `;
+        });
+    }
+
+    function startTimer(idx) { if(!timerIntervals[idx]) timerIntervals[idx] = setInterval(() => { timerSeconds[idx]++; updateTimerDisplay(idx); }, 1000); }
+    function pauseTimer(idx) { clearInterval(timerIntervals[idx]); timerIntervals[idx] = null; }
+    function resetTimer(idx) { pauseTimer(idx); timerSeconds[idx] = 0; updateTimerDisplay(idx); }
+    function updateTimerDisplay(idx) {
+        const s = timerSeconds[idx];
+        const hrs = String(Math.floor(s / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+        const secs = String(s % 60).padStart(2, '0');
+        document.getElementById(`timer-display-${idx}`).innerText = `${hrs}:${mins}:${secs}`;
+    }
+
+    function renderWeekView() {
+        const container = document.getElementById('week-grid-container');
+        container.innerHTML = '';
+        
+        for(let i = 0; i < 7; i++) {
+            const day = masterDatabase[i];
+            let taskList = day.activities.map(a => `<li>• ${a.title} [${a.status==='done'?'✅':'⏳'}]</li>`).join('');
+            let studySummary = Object.entries(day.studyLogs)
+                .map(([sub, mins]) => `<div><span class="logged-hours-badge">${mins} م</span> <span style="font-size:12px;">${sub}</span></div>`)
+                .join('');
+
+            let resultBadge = day.dailyResult === 'perfect' ? '🟢 عالی' : day.dailyResult === 'medium' ? '🟡 متوسط' : day.dailyResult === 'failed' ? '🔴 ضعیف' : 'بدون ارزیابی';
+
+            container.innerHTML += `
+                <div class="main-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px; margin-bottom:10px;">
+                        <strong>${day.dayName} (روز ${day.dayIndex})</strong>
+                        <span style="font-size:11px; color:var(--text-muted);">${resultBadge}</span>
+                    </div>
+                    <div style="margin-bottom:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">🎯 هدف: ${day.dailyGoal || 'ثبت نشده'}</div>
+                        ${studySummary || '<span style="font-size:11px; color:var(--text-muted);">تایم تایمر ثبت نشده</span>'}
+                    </div>
+                    <ul style="list-style:none; font-size:12px; display:flex; flex-direction:column; gap:4px;">${taskList || 'برنامه‌ای ندارد'}</ul>
+                </div>
+            `;
+        }
+    }
+
+    function renderMonthView() {
+        const container = document.getElementById('month-grid-container');
+        container.innerHTML = '';
+        masterDatabase.forEach(day => {
+            const done = day.activities.filter(a => a.status === 'done').length;
+            const total = day.activities.length;
+            let fillPercent = total > 0 ? (done / total) : 0;
+            let cardColor = total > 0 ? `rgba(168, 85, 247, ${fillPercent * 0.4})` : 'rgba(255,255,255,0.01)';
+
+            container.innerHTML += `
+                <div class="main-card" style="padding:15px; background:${cardColor}; cursor:pointer; text-align:center;" onclick="currentActiveDay=${day.dayIndex}; switchSection('day-view')">
+                    <div style="font-weight:bold; font-size:14px;">روز ${day.dayIndex}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${day.dayName}</div>
+                    <div style="font-size:11px; margin-top:8px;">📊 ${done}/${total} تسک</div>
+                </div>
+            `;
+        });
+        document.getElementById('master-goals-input').value = localStorage.getItem('master_goals') || '';
+    }
+
+    function saveMasterGoals() { localStorage.setItem('master_goals', document.getElementById('master-goals-input').value); }
+
+    function saveMacroData() {
+        localStorage.setItem('macro_vision', document.getElementById('macro-vision').value);
+        localStorage.setItem('macro_weights', document.getElementById('macro-weights').value);
+        localStorage.setItem('macro_books', document.getElementById('macro-books').value);
+        localStorage.setItem('macro_skills', document.getElementById('macro-skills').value);
+    }
+
+    function loadMacroData() {
+        document.getElementById('macro-vision').value = localStorage.getItem('macro_vision') || '';
+        document.getElementById('macro-weights').value = localStorage.getItem('macro_weights') || '';
+        document.getElementById('macro-books').value = localStorage.getItem('macro_books') || '';
+        document.getElementById('macro-skills').value = localStorage.getItem('macro_skills') || '';
+    }
+
+    // مقداردهی اولیه سیستم
+    initTimers();
+    renderDayActivities();
+    updateMinutesBadge();
+</script>
+</body>
+</html>
